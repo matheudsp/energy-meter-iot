@@ -1,0 +1,20 @@
+{
+  "wifi": {
+    "ssid": "",
+    "pass": "",
+    "ap_mode": false
+  },
+  "mqtt": {
+    "server": "",
+    "port": 1883,
+    "device_id": "",
+    "interval": 300
+  },
+  "meters": [
+    {
+      "id": 1,
+      "modbus_id": 1,
+      "name": "Medidor 01"
+    }
+  ]
+}

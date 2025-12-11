@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <nav class="navbar">
+      <a href="/" class="brand">⚡ Piauí</a>
+      <div>
+        <a href="wizard.html" class="nav-link">⚙️ Configurar Gateway</a>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="card">
+        <h2>Status do Sistema</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px">
+          <div>
+            <label>Serial ID</label>
+            <div
+              id="serial-id"
+              style="font-family: monospace; font-size: 1.2rem"
+            >
+              ...
+            </div>
+          </div>
+          <div>
+            <label>Conexão WiFi</label>
+            <div id="wifi-status" class="badge">Verificando...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          "
+        >
+          <h2>Medidores</h2>
+          <button
+            onclick="toggleForm()"
+            class="btn-outline"
+            style="width: auto; padding: 5px 15px"
+          >
+            + Novo
+          </button>
+        </div>
+
+        <div
+          id="add-form"
+          style="
+            display: none;
+            background: #222;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 8px;
+          "
+        >
+          <div class="form-group">
+            <label>Nome / Identificação</label>
+            <input type="text" id="m-name" placeholder="Ex: Kitnet 101" />
+          </div>
+          <div class="form-group">
+            <label>Endereço Modbus (ID)</label>
+            <input type="number" id="m-modbus" value="1" min="1" />
+          </div>
+          <button class="btn-primary" onclick="addMeter()">
+            Adicionar à Lista
+          </button>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>ID Modbus</th>
+              <th style="text-align: right">Ação</th>
+            </tr>
+          </thead>
+          <tbody id="meter-list"></tbody>
+        </table>
+
+        <p style="font-size: 0.8rem; color: #888; margin-top: 15px">
+          * As alterações nos medidores são salvas automaticamente na memória do
+          Gateway.
+        </p>
+        <button
+          class="btn-primary"
+          style="margin-top: 10px"
+          onclick="saveMeters()"
+        >
+          💾 Salvar Alterações nos Medidores
+        </button>
+      </div>
+    </div>
+
+    <script>
+      let currentConfig = {};
+
+      async function loadData() {
+        try {
+          const res = await fetch("/api/config");
+          const data = await res.json();
+          currentConfig = data;
+
+          document.getElementById("serial-id").innerText =
+            data.system.serial_id;
+
+          // Simples verificação visual (se tem SSID configurado)
+          const wifiBadge = document.getElementById("wifi-status");
+          if (data.wifi.ssid) {
+            wifiBadge.innerText = `Configurado: ${data.wifi.ssid}`;
+            wifiBadge.className = "badge badge-ok";
+          } else {
+            wifiBadge.innerText = "Não Configurado";
+            wifiBadge.className = "badge badge-err";
+          }
+
+          renderMeters();
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      function renderMeters() {
+        const list = document.getElementById("meter-list");
+        list.innerHTML = "";
+        currentConfig.meters.forEach((m, index) => {
+          list.innerHTML += `
+                    <tr>
+                        <td>${m.name}</td>
+                        <td>${m.modbus_id}</td>
+                        <td style="text-align: right;">
+                            <button class="btn-danger" style="width: auto; padding: 5px 10px;" onclick="removeMeter(${index})">🗑️</button>
+                        </td>
+                    </tr>`;
+        });
+      }
+
+      function toggleForm() {
+        const form = document.getElementById("add-form");
+        form.style.display = form.style.display === "none" ? "block" : "none";
+      }
+
+      function addMeter() {
+        const name = document.getElementById("m-name").value;
+        const modbusId = parseInt(document.getElementById("m-modbus").value);
+        if (!name) return alert("Digite um nome!");
+
+        // Gera ID interno
+        const newId =
+          (currentConfig.meters.length > 0
+            ? Math.max(...currentConfig.meters.map((m) => m.id))
+            : 0) + 1;
+
+        currentConfig.meters.push({
+          id: newId,
+          modbus_id: modbusId,
+          name: name,
+        });
+        renderMeters();
+        document.getElementById("m-name").value = "";
+        toggleForm();
+      }
+
+      function removeMeter(index) {
+        if (confirm("Remover este medidor?")) {
+          currentConfig.meters.splice(index, 1);
+          renderMeters();
+        }
+      }
+
+      async function saveMeters() {
+        // Envia a config completa (o backend espera isso)
+        try {
+          const res = await fetch("/api/save", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(currentConfig),
+          });
+          const resp = await res.json();
+          alert(resp.msg);
+          if (resp.status === "success") location.reload();
+        } catch (e) {
+          alert("Erro ao salvar");
+        }
+      }
+
+      loadData();
+    </script>
+  </body>
+</html>

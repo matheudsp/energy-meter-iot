@@ -1,0 +1,37 @@
+sequenceDiagram
+    participant Gateway as IOT / Simulador
+    participant MQTT as Mosquitto Broker
+    participant InfluxDB as InfluxDB (Time-Series)
+    participant Controller
+    participant Service
+    participant InfluxAdapter
+    autonumber
+    box "NestJS Backend" #f9f9f9
+        participant Controller as TelemetryController
+        participant Service as TelemetryService
+        participant InfluxAdapter as InfluxService
+    end
+
+    Note over Gateway, MQTT: Payload com tensão, corrente, potência e kWh
+
+    Gateway->>MQTT: PUBLISH "energymeter/{device_id}/data"
+    Note right of MQTT: O Backend assina o padrão<br/>"energymeter/+/data"
+
+    MQTT->>Controller: Entrega Mensagem (Payload JSON)
+    Controller->>Service: processTelemetry(data)
+    activate Service
+    Service->>Service: Valida device_id e channels
+    loop Para cada Canal (Ex: 1, 2)
+        alt Se houver dados válidos
+            Service->>InfluxAdapter: writeMeasurement(deviceId, channelId, metrics)
+            activate InfluxAdapter
+            InfluxAdapter->>InfluxAdapter: Cria Point 'circuit_telemetry'
+            InfluxAdapter->>InfluxDB: Write API (HTTP)
+            InfluxDB-->>InfluxAdapter: 204 No Content (Ack)
+            deactivate InfluxAdapter
+        else Se dados zerados
+            Service->>Service: Ignora (continue)
+        end
+    end
+    deactivate Service
+    Note over InfluxDB: Dados disponíveis para<br/>consulta via UnitService

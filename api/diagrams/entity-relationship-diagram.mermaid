@@ -1,0 +1,57 @@
+erDiagram
+    OWNER ||--|{ PLANT : "gerencia (1:N)"
+    PLANT ||--|{ DEVICE : "possui hardware (1:N)"
+    PLANT ||--|{ UNIT : "possui apartamentos (1:N)"
+    
+    DEVICE ||--|{ CHANNEL_MAP : "fornece canais (1:N)"
+    UNIT ||--|{ CHANNEL_MAP : "consome de (1:N)"
+    
+    TENANT ||--|{ UNIT : "aluga (1:N)"
+    TENANT ||--|{ INVOICE : "paga (1:N)"
+    
+    UNIT ||--|{ INVOICE : "gera faturas (1:N)"
+    TARIFF ||--|{ INVOICE : "define preço (1:N)"
+    
+    INVOICE ||--|{ READING_SNAPSHOT : "contém leituras (1:N)"
+    CHANNEL_MAP ||--|{ READING_SNAPSHOT : "origem da leitura (1:N)"
+
+    OWNER {
+        uuid id
+        string name
+        string email
+    }
+
+    PLANT {
+        uuid id
+        string name
+        float peak_power
+        uuid owner_id FK
+    }
+
+    DEVICE {
+        uuid id
+        string serial_number
+        uuid plant_id FK
+    }
+
+    UNIT {
+        uuid id
+        string name
+        uuid plant_id FK
+        uuid current_tenant_id FK
+    }
+
+    CHANNEL_MAP {
+        uuid id
+        int channel_number
+        uuid device_id FK
+        uuid unit_id FK
+    }
+
+    INVOICE {
+        uuid id
+        decimal total_kwh
+        decimal amount_brl
+        uuid unit_id FK
+        uuid tenant_id FK
+    }
