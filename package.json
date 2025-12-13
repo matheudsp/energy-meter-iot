@@ -1,0 +1,23 @@
+{
+  "name": "energy-meter-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "install:all": "npm install",
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\" --kill-others-on-fail",
+    "dev:api": "npm run start:dev --workspace=api",
+    "dev:web": "npm run dev --workspace=web",
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "infra:up": "cd apps/api && docker-compose up -d",
+    "infra:down": "cd apps/api && docker-compose down",
+    "db:migrate": "npm run prisma:migrate --workspace=api",
+    "simulate": "npm run seed:simulator --workspace=api"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
