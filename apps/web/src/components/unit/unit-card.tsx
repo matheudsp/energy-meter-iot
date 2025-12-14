@@ -23,7 +23,7 @@ interface UnitCardProps {
 
 export function UnitCard({ unit }: UnitCardProps) {
   return (
-    <Link to={`/unit/${unit.id}`}>
+    <Link to={`/units/${unit.id}`}>
       <Card className="hover:border-primary/50 hover:shadow-md transition-all duration-300 cursor-pointer group h-full bg-card border-border">
         <CardHeader className="pb-3">
           <div className="flex justify-between items-start">
@@ -31,7 +31,7 @@ export function UnitCard({ unit }: UnitCardProps) {
               <CardTitle className="text-base group-hover:text-primary transition-colors">
                 {unit.name}
               </CardTitle>
-              <CardDescription>ID: {unit.id}</CardDescription>
+              {/* <CardDescription>ID: {unit.id}</CardDescription> */}
             </div>
             <Badge
               variant={unit.telemetry.isOnline ? "default" : "destructive"}
@@ -48,7 +48,6 @@ export function UnitCard({ unit }: UnitCardProps) {
         </CardHeader>
 
         <CardContent className="space-y-2.5">
-          {/* Dados de Potência */}
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground flex items-center gap-2">
               <Zap className="size-4 text-primary/80" /> Potência
@@ -61,7 +60,6 @@ export function UnitCard({ unit }: UnitCardProps) {
             </div>
           </div>
 
-          {/* Dados de Consumo Mensal [NOVO] */}
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground flex items-center gap-2">
               <TrendingUp className="size-4 text-primary/80" /> Mensal
@@ -73,8 +71,6 @@ export function UnitCard({ unit }: UnitCardProps) {
               </span>
             </div>
           </div>
-
-          {/* Dados de Consumo Total */}
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground flex items-center gap-2">
               <HousePlug className="size-4 text-primary/80" /> Total
@@ -87,7 +83,6 @@ export function UnitCard({ unit }: UnitCardProps) {
             </div>
           </div>
 
-          {/* Rodapé Interno com Last Update e Seta */}
           <div className="pt-3 mt-1 border-t border-border flex items-center justify-between">
             <div className="flex items-center text-xs text-muted-foreground gap-1.5">
               <CloudSync className="size-3" />

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router";
 import { useUnitHistory, type HistoryPeriod } from "@/hooks/use-unit-history";
-import { ArrowLeft, Loader2, AlertCircle } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -14,7 +14,6 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardHeader,

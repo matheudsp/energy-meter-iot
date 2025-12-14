@@ -53,49 +53,51 @@ export default function PlantDetailsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-7xl px-4 sm:px-6 lg:px-8 py-8 mx-auto border-b border-border bg-card">
-        <div className=" ">
+      {/* Header Section */}
+      <div className="bg-card border-b border-border">
+        <div className="max-w-7xl px-4 sm:px-6 lg:px-8 py-6 md:py-8 mx-auto">
           <Link
             to="/plants"
-            className="inline-flex items-center text-sm text-muted-foreground hover:text-primary mb-6 transition-colors"
+            className="inline-flex items-center text-sm text-muted-foreground hover:text-primary mb-4 md:mb-6 transition-colors"
           >
             <ArrowLeft className="mr-2 size-4" />
             Voltar
           </Link>
 
-          <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
-            <div className="size-24 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
-              <Building2 className="size-12 text-primary" />
+          <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
+            {/* Ícone Responsivo */}
+            <div className="size-16 md:size-24 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
+              <Building2 className="size-8 md:size-12 text-primary" />
             </div>
 
-            <div className="flex-1 space-y-2">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                <h1 className="text-3xl font-bold tracking-tight">
+            <div className="flex-1 space-y-2 w-full min-w-0">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                <h1 className="text-2xl md:text-3xl font-bold tracking-tight truncate">
                   {plant.name}
                 </h1>
-                <Badge variant="outline" className="w-fit">
+                <Badge variant="outline" className="w-fit shrink-0">
                   ID: {plant.id}
                 </Badge>
               </div>
 
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1.5">
-                  <MapPin className="size-4" />
-                  {plant.address || "Endereço não informado"}
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <MapPin className="size-4 shrink-0" />
+                  <span className="truncate">
+                    {plant.address || "Endereço não informado"}
+                  </span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <User className="size-4" />
-                  {plant.owner?.name || "Sem proprietário"}
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <User className="size-4 shrink-0" />
+                  <span className="truncate">
+                    {plant.owner?.name || "Sem proprietário"}
+                  </span>
                 </div>
               </div>
             </div>
-
-            {/* <div className="flex gap-3">
-              <Button variant="outline">Editar</Button>
-            </div> */}
           </div>
 
-          <div className="flex gap-8 mt-8 pt-6 border-t border-border">
+          <div className="grid grid-cols-2 sm:flex sm:gap-8 mt-6 md:mt-8 pt-6 border-t border-border">
             <div className="flex flex-col">
               <span className="text-2xl font-bold text-foreground">
                 {plant.units?.length || 0}
@@ -104,7 +106,7 @@ export default function PlantDetailsPage() {
                 Unidades
               </span>
             </div>
-            <div className="flex flex-col">
+            <div className="flex flex-col border-l border-border pl-4 sm:border-0 sm:pl-0">
               <span className="text-2xl font-bold text-foreground">
                 {plant.devices?.length || 0}
               </span>
@@ -116,35 +118,40 @@ export default function PlantDetailsPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto ">
+      <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 ">
         <Tabs defaultValue="units" className="w-full">
-          <TabsList className="w-full justify-start h-auto p-0 bg-transparent border-b border-border rounded-none space-x-6">
-            <TabsTrigger
-              value="units"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-0 py-3 data-[state=active]:shadow-none"
-            >
-              <Box className="mr-2 size-4" />
-              Unidades
-            </TabsTrigger>
-            <TabsTrigger
-              value="devices"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-0 py-3 data-[state=active]:shadow-none"
-            >
-              <Cpu className="mr-2 size-4" />
-              Dispositivos
-            </TabsTrigger>
-            <TabsTrigger
-              value="settings"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-0 py-3 data-[state=active]:shadow-none"
-            >
-              <Settings className="mr-2 size-4" />
-              Configurações
-            </TabsTrigger>
-          </TabsList>
+          <div className="w-full overflow-x-auto pb-px">
+            <TabsList className="w-full justify-start h-auto p-0 bg-transparent border-b border-x border-border rounded-none  min-w-max">
+              <TabsTrigger
+                value="units"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-3 py-3 data-[state=active]:shadow-none hover:text-foreground transition-colors"
+              >
+                <Box className="mr-2 size-4" />
+                Unidades
+              </TabsTrigger>
+              <TabsTrigger
+                value="devices"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-3 py-3 data-[state=active]:shadow-none hover:text-foreground transition-colors"
+              >
+                <Cpu className="mr-2 size-4" />
+                Dispositivos
+              </TabsTrigger>
+              <TabsTrigger
+                value="settings"
+                className="rounded-none border-b-2  border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-3 py-3 data-[state=active]:shadow-none hover:text-foreground transition-colors"
+              >
+                <Settings className="mr-2 size-4" />
+                Configurações
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-          <TabsContent value="units" className="mt-6 space-y-4">
+          <TabsContent
+            value="units"
+            className="mt-6 space-y-4 animate-in fade-in duration-300 px-4 sm:px-0"
+          >
             {plant.units && plant.units.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ">
                 {plant.units.map((unit: any) => (
                   <UnitCard key={unit.id} unit={unit} />
                 ))}
@@ -165,17 +172,20 @@ export default function PlantDetailsPage() {
             )}
           </TabsContent>
 
-          <TabsContent value="devices" className="mt-6">
+          <TabsContent
+            value="devices"
+            className="mt-6 animate-in fade-in duration-300 px-4 sm:px-0"
+          >
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="space-y-1">
                     <CardTitle>Dispositivos Vinculados</CardTitle>
                     <CardDescription>
                       Gerencie os medidores instalados nesta planta.
                     </CardDescription>
                   </div>
-                  <Button size="sm">
+                  <Button size="sm" className="w-full sm:w-auto">
                     <Plus className="mr-2 size-4" /> Novo Dispositivo
                   </Button>
                 </div>
@@ -186,15 +196,15 @@ export default function PlantDetailsPage() {
                     {plant.devices.map((device: any) => (
                       <div
                         key={device.id}
-                        className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors"
+                        className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors gap-3"
                       >
-                        <div className="flex items-center gap-4">
-                          <div className="bg-muted p-2.5 rounded-full">
+                        <div className="flex items-center gap-3 sm:gap-4 overflow-hidden">
+                          <div className="bg-muted p-2.5 rounded-full shrink-0">
                             <Cpu className="size-5 text-foreground" />
                           </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <p className="font-medium text-sm">
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="font-medium text-sm truncate">
                                 {device.serialNumber}
                               </p>
                               <Badge
@@ -203,7 +213,7 @@ export default function PlantDetailsPage() {
                                     ? "default"
                                     : "secondary"
                                 }
-                                className={`text-[10px] px-1.5 py-0 ${
+                                className={`text-[10px] px-1.5 py-0 shrink-0 ${
                                   device.status === "ONLINE"
                                     ? "bg-green-600/15 text-green-700 dark:bg-green-900/30 dark:text-green-400 hover:bg-green-600/25"
                                     : ""
@@ -212,9 +222,11 @@ export default function PlantDetailsPage() {
                                 {device.status || "OFFLINE"}
                               </Badge>
                             </div>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              Firmware: {device.firmwareVersion || "N/A"} •{" "}
-                              <span className="inline-block">
+                            <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                              <span className="hidden sm:inline">
+                                Firmware: {device.firmwareVersion || "N/A"} •{" "}
+                              </span>
+                              <span>
                                 Último sinal:{" "}
                                 {device.lastSeenAt
                                   ? new Date(device.lastSeenAt).toLocaleString()
@@ -229,7 +241,7 @@ export default function PlantDetailsPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="size-8"
+                              className="size-8 shrink-0"
                             >
                               <MoreVertical className="size-4 text-muted-foreground" />
                               <span className="sr-only">Ações</span>
@@ -250,7 +262,7 @@ export default function PlantDetailsPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-10 text-center bg-muted/20 border border-dashed rounded-lg">
+                  <div className="flex flex-col items-center justify-center py-10 text-center bg-muted/20 border border-dashed rounded-lg px-4">
                     <Cpu className="size-10 text-muted-foreground/50 mb-3" />
                     <p className="text-sm font-medium text-foreground">
                       Nenhum dispositivo vinculado
@@ -258,7 +270,11 @@ export default function PlantDetailsPage() {
                     <p className="text-xs text-muted-foreground max-w-xs mt-1 mb-4">
                       Adicione um medidor IoT para começar a coletar dados.
                     </p>
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full sm:w-auto"
+                    >
                       Adicionar Agora
                     </Button>
                   </div>
@@ -267,7 +283,10 @@ export default function PlantDetailsPage() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="settings" className="mt-6">
+          <TabsContent
+            value="settings"
+            className="mt-6 animate-in fade-in duration-300 px-4 sm:px-0"
+          >
             <Card>
               <CardHeader>
                 <CardTitle>Configurações da Planta</CardTitle>
@@ -297,7 +316,11 @@ export default function PlantDetailsPage() {
                   <h4 className="text-sm font-medium text-destructive mb-2">
                     Zona de Perigo
                   </h4>
-                  <Button variant="destructive" size="sm">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="w-full sm:w-auto"
+                  >
                     Excluir Planta
                   </Button>
                 </div>

@@ -17,7 +17,7 @@ interface PlantCardProps {
 
 export function PlantCard({ plant }: PlantCardProps) {
   return (
-    <Link to={`/plant/${plant.id}`}>
+    <Link to={`/plants/${plant.id}`}>
       <Card className="hover:border-primary/50 hover:shadow-md transition-all duration-300 cursor-pointer group h-full bg-card border-border">
         <CardHeader>
           <div className="flex justify-between items-start">
@@ -26,9 +26,9 @@ export function PlantCard({ plant }: PlantCardProps) {
                 <Building2 className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />
                 {plant.name}
               </CardTitle>
-              <CardDescription className="flex items-center gap-1">
+              {/* <CardDescription className="flex items-center gap-1">
                 ID: {plant.id}
-              </CardDescription>
+              </CardDescription> */}
             </div>
 
             <ArrowRight className="size-5 text-primary opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
