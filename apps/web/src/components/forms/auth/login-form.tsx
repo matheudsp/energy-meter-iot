@@ -8,11 +8,11 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../ui/card";
+} from "../../ui/card";
 import { cn } from "@/lib/utils";
-import { Input } from "../ui/input";
+import { Input } from "../../ui/input";
 import { AlertCircle, Loader2 } from "lucide-react";
-import { Button } from "../ui/button";
+import { Button } from "../../ui/button";
 
 export function LoginForm({
   className,

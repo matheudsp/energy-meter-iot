@@ -5,11 +5,9 @@ import {
   Activity,
   TrendingUp,
   AlertTriangle,
-  Leaf,
   RefreshCw,
   MoreHorizontal,
   DollarSign,
-  Server,
   Signal,
 } from "lucide-react";
 import {
@@ -113,66 +111,34 @@ function CircularGauge({
   );
 }
 
-// Card de Uso (Adaptado para Energia)
 function OperationalStatusCard({
   units,
-  totalPower,
   totalKwh,
 }: {
   units: Unit[];
   totalPower: number;
   totalKwh: number;
 }) {
-  // Cálculos baseados nos dados reais
   const totalDevices = units.length || 1;
   const onlineDevices = units.filter((u) => u.telemetry.isOnline).length;
   const onlinePercentage = (onlineDevices / totalDevices) * 100;
 
-  // Metas Simuladas (Idealmente viriam do backend)
-  const POWER_CAPACITY_KW = 50; // Ex: Transformador aguenta 50kW
-  const powerPercentage = Math.min(
-    (totalPower / 1000 / POWER_CAPACITY_KW) * 100,
-    100
-  );
-
-  const MONTHLY_TARGET_KWH = 2000; // Meta de consumo
-  const targetPercentage = Math.min((totalKwh / MONTHLY_TARGET_KWH) * 100, 100);
-
-  const estimatedBill = totalKwh * 0.92; // R$ 0.92 por kWh
-  const co2Emission = totalKwh * 0.085; // kg de CO2
+  const targetPercentage = Math.min(totalKwh * 100, 100);
 
   const usageItems = [
     {
-      name: "Meta de Consumo Mensal",
-      value: `${totalKwh.toFixed(0)} / ${MONTHLY_TARGET_KWH} kWh`,
+      name: "Consumo total este mês",
+      value: `${totalKwh.toFixed(0)} kWh`,
       percentage: targetPercentage,
       icon: Activity,
     },
-    {
-      name: "Uso de Capacidade (Demanda)",
-      value: `${(totalPower / 1000).toFixed(1)} / ${POWER_CAPACITY_KW} kW`,
-      percentage: powerPercentage,
-      icon: Server,
-    },
-    {
-      name: "Disponibilidade da Rede",
-      value: `${onlineDevices} / ${totalDevices} Medidores`,
-      percentage: onlinePercentage,
-      icon: Signal,
-      color: onlinePercentage < 80 ? "text-destructive" : "text-green-500",
-    },
-    {
-      name: "Fatura Estimada (Mês)",
-      value: `R$ ${estimatedBill.toFixed(2)}`,
-      percentage: targetPercentage, // Acompanha o consumo
-      icon: DollarSign,
-    },
-    {
-      name: "Pegada de Carbono (CO₂)",
-      value: `${co2Emission.toFixed(1)} kg`,
-      percentage: targetPercentage,
-      icon: Leaf,
-    },
+    // {
+    //   name: "Disponibilidade da rede",
+    //   value: `${onlineDevices} / ${totalDevices} Medidores`,
+    //   percentage: onlinePercentage,
+    //   icon: Signal,
+    //   color: onlinePercentage < 80 ? "text-destructive" : "text-green-500",
+    // },
   ];
 
   return (
@@ -182,7 +148,7 @@ function OperationalStatusCard({
           Status Operacional
         </CardTitle>
         <div className="text-2xl font-bold text-foreground">
-          Visão Geral do Ciclo
+          Visão Geral do Mês
         </div>
       </CardHeader>
       <CardContent className="p-0 flex-1">
@@ -208,84 +174,6 @@ function OperationalStatusCard({
     </Card>
   );
 }
-
-// Card de Analytics (Adaptado para Consumo kWh)
-function EnergyTrendCard() {
-  const currentMonthKwh = ANALYTICS_DATA[ANALYTICS_DATA.length - 1].kwh;
-  const previousMonthKwh = ANALYTICS_DATA[ANALYTICS_DATA.length - 2].kwh;
-  const growth =
-    ((currentMonthKwh - previousMonthKwh) / previousMonthKwh) * 100;
-
-  return (
-    <Card className="w-full flex flex-col h-full" data-size="sm">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <CardTitle>Tendência de Consumo</CardTitle>
-            <CardDescription className="flex items-center gap-2 mt-1">
-              {currentMonthKwh.toLocaleString()} kWh neste mês
-              <Badge
-                variant="secondary"
-                className={cn(
-                  growth > 0
-                    ? "text-red-600 bg-red-100 dark:bg-red-900/30"
-                    : "text-green-600 bg-green-100 dark:bg-green-900/30"
-                )}
-              >
-                {growth > 0 ? "+" : ""}
-                {growth.toFixed(1)}%
-              </Badge>
-            </CardDescription>
-          </div>
-          <CardAction>
-            <Button variant="outline" size="sm">
-              Ver Relatório
-            </Button>
-          </CardAction>
-        </div>
-      </CardHeader>
-      <CardContent className="pb-0 flex-1 flex flex-col justify-end">
-        <ChartContainer
-          config={chartConfig}
-          className="aspect-[1/0.45] w-full max-h-[250px]"
-        >
-          <AreaChart
-            data={ANALYTICS_DATA}
-            margin={{ left: 0, right: 0, top: 10, bottom: 0 }}
-          >
-            <defs>
-              <linearGradient id="fillKwh" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor="var(--color-kwh)"
-                  stopOpacity={0.3}
-                />
-                <stop
-                  offset="95%"
-                  stopColor="var(--color-kwh)"
-                  stopOpacity={0}
-                />
-              </linearGradient>
-            </defs>
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent indicator="line" hideLabel />}
-            />
-            <Area
-              dataKey="kwh"
-              type="natural"
-              fill="url(#fillKwh)"
-              stroke="var(--color-kwh)"
-              strokeWidth={2}
-            />
-          </AreaChart>
-        </ChartContainer>
-      </CardContent>
-    </Card>
-  );
-}
-
-// --- DASHBOARD PRINCIPAL ---
 
 export default function Dashboard() {
   const {
@@ -334,14 +222,14 @@ export default function Dashboard() {
     );
   }
 
-  // Cálculos de KPIs
   const totalPowerW =
     units?.reduce((acc, u) => acc + u.telemetry.power, 0) || 0;
   const totalKwhMonth =
     units?.reduce((acc, u) => acc + (u.telemetry.monthlyKwh || 0), 0) || 0;
-  const onlineCount = units?.filter((u) => u.telemetry.isOnline).length || 0;
-  const totalDevices = units?.length || 0;
-  const offlineCount = totalDevices - onlineCount;
+  // TODO - return devices in the response, to calcule devices here.
+  // const onlineCount = units?.filter((u) => u.telemetry.isOnline).length || 0;
+  // const totalDevices = units?.length || 0;
+  // const offlineCount = totalDevices - onlineCount;
 
   const powerDisplay =
     totalPowerW > 1000
@@ -381,103 +269,32 @@ export default function Dashboard() {
           title="Consumo Mensal"
           value={`${totalKwhMonth.toFixed(1)} kWh`}
           icon={TrendingUp}
-          description="Acumulado no ciclo atual"
+          description="Acumulado no mês atual"
         />
-        <KpiCard
+        {/* <KpiCard
           title="Status da Rede"
           value={`${onlineCount} / ${totalDevices} Online`}
           icon={Signal}
           description="Conectividade dos medidores"
           trend={offlineCount > 0 ? "warning" : "success"}
           trendText={offlineCount > 0 ? `${offlineCount} Offline` : "Estável"}
-        />
-        <KpiCard
-          title="Custo Estimado"
-          value={`R$ ${(totalKwhMonth * 0.92).toFixed(2)}`}
-          icon={DollarSign}
-          description="Tarifa base: R$ 0,92/kWh"
-        />
+        /> */}
       </div>
 
-      {/* --- NOVA SEÇÃO: ANALYTICS & USAGE (Estilo Vercel) --- */}
       <div>
         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <Activity className="size-4 text-primary" /> Métricas Operacionais
         </h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
-          {/* Passamos os dados reais para o Card */}
           <OperationalStatusCard
             units={units || []}
             totalPower={totalPowerW}
             totalKwh={totalKwhMonth}
           />
-          <EnergyTrendCard />
         </div>
       </div>
 
-      {/* Gráfico Detalhado e Top Consumidores */}
       <div className="grid grid-cols-1 lg:grid-cols-7 gap-8">
-        <Card className="lg:col-span-4 border-border shadow-sm">
-          <CardHeader>
-            <CardTitle>Curva de Carga (7 Dias)</CardTitle>
-            <CardDescription>
-              Perfil de consumo horário médio (Simulado)
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pl-0">
-            <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={MOCK_WEEKLY_DATA}>
-                  <defs>
-                    <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                      <stop
-                        offset="5%"
-                        stopColor="var(--primary)"
-                        stopOpacity={0.3}
-                      />
-                      <stop
-                        offset="95%"
-                        stopColor="var(--primary)"
-                        stopOpacity={0}
-                      />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="var(--border)"
-                  />
-                  <XAxis
-                    dataKey="name"
-                    axisLine={false}
-                    tickLine={false}
-                    tickMargin={10}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tickFormatter={(value) => `${value}kWh`}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "var(--card)",
-                      borderRadius: "8px",
-                      border: "1px solid var(--border)",
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="total"
-                    stroke="var(--primary)"
-                    fillOpacity={1}
-                    fill="url(#colorTotal)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Top Consumidores */}
         <Card className="lg:col-span-3 border-border shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -11,6 +12,7 @@ import type { JwtPayload } from '@/common/interfaces/jwt-payload.interface';
 import { UserRole } from '@/common/enums/domain.enums';
 import { AccessControlService } from '@/providers/access-control/access-control.service';
 import { TelemetryAnalyticsService } from '@/modules/telemetry/services/telemetry-analytics.service';
+import type { UpdateUnitDto } from './dto/update-unit.dto';
 
 @Injectable()
 export class UnitService {
@@ -41,11 +43,40 @@ export class UnitService {
       throw new NotFoundException('Planta não encontrada');
     }
 
-    return this.prisma.unit.create({
-      data: {
-        name: createUnitDto.name,
-        plantId: createUnitDto.plantId,
-      },
+    if (createUnitDto.deviceId && createUnitDto.channelIndex !== undefined) {
+      const existingMap = await this.prisma.channelMap.findFirst({
+        where: {
+          deviceId: createUnitDto.deviceId,
+          channelIndex: createUnitDto.channelIndex,
+        },
+      });
+
+      if (existingMap) {
+        throw new ConflictException(
+          `O canal ${createUnitDto.channelIndex} deste dispositivo já está em uso.`,
+        );
+      }
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const unit = await tx.unit.create({
+        data: {
+          name: createUnitDto.name,
+          plantId: createUnitDto.plantId,
+        },
+      });
+
+      if (createUnitDto.deviceId && createUnitDto.channelIndex !== undefined) {
+        await tx.channelMap.create({
+          data: {
+            unitId: unit.id,
+            deviceId: createUnitDto.deviceId,
+            channelIndex: createUnitDto.channelIndex,
+          },
+        });
+      }
+
+      return unit;
     });
   }
 
@@ -159,5 +190,57 @@ export class UnitService {
     }
 
     return results;
+  }
+
+  async update(id: string, dto: UpdateUnitDto, user: JwtPayload) {
+    await this.accessControl.requireUnitAccess(user.sub, id, user.role);
+
+    const unit = await this.prisma.unit.findUnique({
+      where: { id },
+      include: { channelMaps: true },
+    });
+
+    if (!unit) throw new NotFoundException('Unidade não encontrada');
+
+    if (dto.deviceId && dto.channelIndex !== undefined) {
+      const existingMap = await this.prisma.channelMap.findFirst({
+        where: {
+          deviceId: dto.deviceId,
+          channelIndex: dto.channelIndex,
+          NOT: { unitId: id },
+        },
+      });
+
+      if (existingMap) {
+        throw new ConflictException(
+          `O canal ${dto.channelIndex} deste dispositivo já está em uso por outra unidade.`,
+        );
+      }
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const updatedUnit = await tx.unit.update({
+        where: { id },
+        data: {
+          name: dto.name,
+        },
+      });
+
+      if (dto.deviceId && dto.channelIndex !== undefined) {
+        await tx.channelMap.deleteMany({
+          where: { unitId: id },
+        });
+
+        await tx.channelMap.create({
+          data: {
+            unitId: id,
+            deviceId: dto.deviceId,
+            channelIndex: dto.channelIndex,
+          },
+        });
+      }
+
+      return updatedUnit;
+    });
   }
 }

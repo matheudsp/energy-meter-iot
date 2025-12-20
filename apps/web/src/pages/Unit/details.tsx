@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router";
+import { useParams, useNavigate } from "react-router";
 import { useUnitHistory, type HistoryPeriod } from "@/hooks/use-unit-history";
 import { ArrowLeft } from "lucide-react";
 import {
@@ -171,6 +171,7 @@ const SmartChart = ({ title, dataSeries, metric, period }: any) => {
 
 export default function UnitDetails() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [period, setPeriod] = useState<HistoryPeriod>("day");
   const { data, isLoading, error } = useUnitHistory(id!, period);
 
@@ -197,15 +198,15 @@ export default function UnitDetails() {
 
   return (
     <div className="min-h-screen p-8 max-w-7xl mx-auto animate-in fade-in duration-500">
-      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-          <Link
-            to="/"
-            className="flex items-center text-muted-foreground hover:text-primary mb-2 transition-colors font-medium text-sm"
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center text-muted-foreground hover:text-primary mb-2 transition-colors font-medium text-sm bg-transparent border-none cursor-pointer p-0"
           >
             <ArrowLeft size={16} className="mr-1" /> Voltar
-          </Link>
+          </button>
+
           <h1 className="text-3xl font-bold text-foreground">
             Detalhes da Unidade
           </h1>

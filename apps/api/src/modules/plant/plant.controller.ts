@@ -1,9 +1,10 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { PlantService } from './plant.service';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { JwtPayload } from '@/common/interfaces/jwt-payload.interface';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { UserRole } from '@/common/enums/domain.enums';
+import type { AddDeviceToPlantDto } from './dto/add-device.dto';
 
 @Controller('plants')
 export class PlantController {
@@ -14,6 +15,15 @@ export class PlantController {
   // create(@Body() dto: CreatePlantDto) {
   //   return this.plantService.create(dto);
   // }
+
+  @Post(':id/devices')
+  async addDevice(
+    @Param('id') id: string,
+    @Body() dto: AddDeviceToPlantDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.plantService.addDevice(id, dto.serialNumber, user);
+  }
 
   @Get()
   findAll(@CurrentUser() user: JwtPayload) {

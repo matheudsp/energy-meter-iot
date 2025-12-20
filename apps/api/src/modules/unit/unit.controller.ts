@@ -6,6 +6,7 @@ import {
   Param,
   Query,
   ForbiddenException,
+  Patch,
 } from '@nestjs/common';
 import { UnitService } from './unit.service';
 import { CreateUnitDto } from './dto/create-unit.dto';
@@ -15,6 +16,7 @@ import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { JwtPayload } from '@/common/interfaces/jwt-payload.interface';
 import { UserRole } from '@/common/enums/domain.enums';
 import { Roles } from '@/common/decorators/roles.decorator';
+import type { UpdateUnitDto } from './dto/update-unit.dto';
 
 @Controller('units')
 export class UnitController {
@@ -59,5 +61,14 @@ export class UnitController {
     metric: 'total_kwh' | 'voltage' | 'current' | 'power' | 'all' = 'all',
   ) {
     return this.unitService.getHistory(id, user, period, metric);
+  }
+
+  @Patch(':id')
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateUnitDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.unitService.update(id, dto, user);
   }
 }

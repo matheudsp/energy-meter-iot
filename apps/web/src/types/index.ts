@@ -14,7 +14,7 @@ export interface Plant {
     units: number;
     devices: number;
   };
-  units?: any[];
+  units?: Unit[];
   devices?: any[];
 }
 
@@ -34,12 +34,20 @@ export interface UnitTelemetry {
   channels: ChannelTelemetry[];
 }
 
+export interface ChannelMap {
+  id: string;
+  deviceId: string;
+  channelIndex: number;
+  unitId: string;
+}
+
 export interface Unit {
   id: string;
   name: string;
   plantId?: string;
-  plant: Plant;
-  telemetry: UnitTelemetry;
+  plant?: Plant;
+  telemetry?: UnitTelemetry;
+  channelMaps?: ChannelMap[];
 }
 
 export interface HistoryPoint {

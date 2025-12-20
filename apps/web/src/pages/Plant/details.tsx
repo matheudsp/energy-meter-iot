@@ -34,11 +34,25 @@ import {
 import { PageLoading } from "@/components/feedbacks/page-loading";
 import { PageError } from "@/components/feedbacks/page-error";
 import { UnitCard } from "@/components/unit/unit-card";
-
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { AddDeviceForm } from "@/components/forms/device/add-device-form";
+import { useState } from "react";
+import {
+  NewUnitForm,
+  type OccupiedChannel,
+} from "@/components/forms/unit/new-unit-form";
 export default function PlantDetailsPage() {
   const { id } = useParams<{ id: string }>();
-  const { data: plant, isLoading, error } = usePlantDetails(id!);
-
+  const { data: plant, isLoading, error, refetch } = usePlantDetails(id!);
+  const [isDeviceDialogOpen, setIsDeviceDialogOpen] = useState(false);
+  const [isUnitDialogOpen, setIsUnitDialogOpen] = useState(false);
   if (isLoading)
     return <PageLoading message="Carregando informações da planta..." />;
   if (error)
@@ -51,9 +65,17 @@ export default function PlantDetailsPage() {
     );
   if (!plant) return null;
 
+  const occupiedChannels: OccupiedChannel[] =
+    plant?.units?.flatMap(
+      (unit: any) =>
+        unit.channelMaps?.map((map: any) => ({
+          deviceId: map.deviceId,
+          channelIndex: map.channelIndex,
+        })) || []
+    ) || [];
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Header Section */}
       <div className="bg-card border-b border-border">
         <div className="max-w-7xl px-4 sm:px-6 lg:px-8 py-6 md:py-8 mx-auto">
           <Link
@@ -65,7 +87,6 @@ export default function PlantDetailsPage() {
           </Link>
 
           <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
-            {/* Ícone Responsivo */}
             <div className="size-16 md:size-24 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
               <Building2 className="size-8 md:size-12 text-primary" />
             </div>
@@ -94,6 +115,39 @@ export default function PlantDetailsPage() {
                   </span>
                 </div>
               </div>
+            </div>
+
+            <div className="mt-4 sm:mt-0">
+              <Dialog
+                open={isUnitDialogOpen}
+                onOpenChange={setIsUnitDialogOpen}
+              >
+                <DialogTrigger asChild>
+                  <Button className="w-full sm:w-auto">
+                    <Plus className="mr-2 size-4" /> Nova Unidade
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Nova Unidade</DialogTitle>
+                    <DialogDescription>
+                      Crie uma nova unidade. Canais já utilizados ficarão
+                      indisponíveis.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="mt-4">
+                    <NewUnitForm
+                      plantId={plant.id}
+                      devices={plant.devices || []}
+                      occupiedChannels={occupiedChannels}
+                      onSuccess={() => {
+                        setIsUnitDialogOpen(false);
+                        refetch();
+                      }}
+                    />
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
 
@@ -153,7 +207,14 @@ export default function PlantDetailsPage() {
             {plant.units && plant.units.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ">
                 {plant.units.map((unit: any) => (
-                  <UnitCard key={unit.id} unit={unit} />
+                  <UnitCard
+                    key={unit.id}
+                    unit={unit}
+                    devices={plant.devices || []}
+                    occupiedChannels={occupiedChannels}
+                    onUpdate={refetch}
+                    showActions={true}
+                  />
                 ))}
               </div>
             ) : (
@@ -185,9 +246,35 @@ export default function PlantDetailsPage() {
                       Gerencie os medidores instalados nesta planta.
                     </CardDescription>
                   </div>
-                  <Button size="sm" className="w-full sm:w-auto">
-                    <Plus className="mr-2 size-4" /> Novo Dispositivo
-                  </Button>
+                  <Dialog
+                    open={isDeviceDialogOpen}
+                    onOpenChange={setIsDeviceDialogOpen}
+                  >
+                    <DialogTrigger asChild>
+                      <Button size="sm" className="w-full sm:w-auto">
+                        <Plus className="mr-2 size-4" /> Novo Dispositivo
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Adicionar Dispositivo</DialogTitle>
+                        <DialogDescription>
+                          Vincule um medidor existente a esta planta informando
+                          seu número de série.
+                        </DialogDescription>
+                      </DialogHeader>
+
+                      <div className="mt-4">
+                        <AddDeviceForm
+                          plantId={plant.id}
+                          onSuccess={() => {
+                            setIsDeviceDialogOpen(false);
+                            refetch();
+                          }}
+                        />
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </CardHeader>
               <CardContent>

@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import { Zap } from "lucide-react";
-import { SignupForm } from "@/components/forms/signup-form";
+import { SignupForm } from "@/components/forms/auth/signup-form";
 
 export default function RegisterPage() {
   return (

@@ -18,7 +18,7 @@ interface PlantCardProps {
 export function PlantCard({ plant }: PlantCardProps) {
   return (
     <Link to={`/plants/${plant.id}`}>
-      <Card className="hover:border-primary/50 hover:shadow-md transition-all duration-300 cursor-pointer group h-full bg-card border-border">
+      <Card className="min-w-[260px] hover:border-primary/50 hover:shadow-md transition-all duration-300 cursor-pointer group h-full bg-card border-border">
         <CardHeader>
           <div className="flex justify-between items-start">
             <div>
