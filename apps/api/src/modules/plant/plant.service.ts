@@ -1,33 +1,30 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
-import { CreatePlantDto } from './dto/create-plant.dto';
 import { PrismaService } from '@/providers/database/prisma/prisma.service';
 import { AccessControlService } from '@/providers/access-control/access-control.service';
 import { JwtPayload } from '@/common/interfaces/jwt-payload.interface';
-import { InfluxService } from '@/providers/database/influx/influx.service';
+
 import { TelemetryAnalyticsService } from '../telemetry/services/telemetry-analytics.service';
+import type { UpdatePlantDto } from './dto/update-plant.dto';
+import type { CreatePlantDto } from './dto/create-plant.dto';
 
 @Injectable()
 export class PlantService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly accessControl: AccessControlService,
-    private readonly influxService: InfluxService,
     private readonly telemetryAnalytics: TelemetryAnalyticsService,
   ) {}
 
-  // async create(dto: CreatePlantDto) {
-  //   const plant = this.plantRepository.create({
-  //     name: dto.name,
-  //     address: dto.address,
-  //   });
-
-  //   return this.plantRepository.save(plant);
-  // }
+  async create(dto: CreatePlantDto, user: JwtPayload) {
+    return this.prisma.plant.create({
+      data: {
+        name: dto.name,
+        address: dto.address,
+        ownerId: user.sub,
+      },
+    });
+  }
 
   async findAll(user: JwtPayload) {
     const plantFilter = this.accessControl.getPlantAccessFilter(
@@ -82,30 +79,28 @@ export class PlantService {
     return { ...plant, units: enrichedUnits };
   }
 
-  async addDevice(plantId: string, serialNumber: string, user: JwtPayload) {
-    await this.accessControl.requirePlantAccess(user.sub, plantId, user.role);
-    const device = await this.prisma.device.findUnique({
-      where: { serialNumber },
+  async update(id: string, dto: UpdatePlantDto, user: JwtPayload) {
+    await this.accessControl.requirePlantAccess(user.sub, id, user.role);
+
+    return this.prisma.plant.update({
+      where: { id },
+      data: {
+        ...dto,
+      },
     });
+  }
 
-    if (!device) {
-      throw new NotFoundException('Dispositivo não encontrado.');
-    }
+  /**
+   * Exclui (Soft Delete) uma planta
+   */
+  async remove(id: string, user: JwtPayload) {
+    await this.accessControl.requirePlantAccess(user.sub, id, user.role);
 
-    if (device.plantId && device.plantId !== plantId) {
-      throw new BadRequestException(
-        'Este dispositivo já está associado a outra planta. Remova-o da planta anterior antes de adicionar aqui.',
-      );
-    }
-
-    if (device.plantId === plantId) {
-      return device;
-    }
-
-    // 5. Realiza a associação
-    return this.prisma.device.update({
-      where: { id: device.id },
-      data: { plantId },
+    return this.prisma.plant.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+      },
     });
   }
 }

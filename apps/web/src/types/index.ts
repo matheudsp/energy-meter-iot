@@ -2,6 +2,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  role: UserRole;
 }
 
 export interface Plant {
@@ -61,3 +62,12 @@ export interface MetricSeries {
   metric: "voltage" | "current" | "power" | "total_kwh";
   data: HistoryPoint[];
 }
+
+export const UserRole = {
+  ADMIN: "ADMIN",
+  OWNER: "OWNER",
+  INTEGRATOR: "INTEGRATOR",
+  TENANT: "TENANT",
+} as const;
+
+export type UserRole = (typeof UserRole)[keyof typeof UserRole];

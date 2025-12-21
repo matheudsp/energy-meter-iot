@@ -243,4 +243,29 @@ export class UnitService {
       return updatedUnit;
     });
   }
+
+  async remove(id: string, user: JwtPayload) {
+    await this.accessControl.requireUnitAccess(user.sub, id, user.role);
+
+    const unit = await this.prisma.unit.findUnique({
+      where: { id },
+    });
+
+    if (!unit) {
+      throw new NotFoundException('Unidade não encontrada');
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      await tx.channelMap.deleteMany({
+        where: { unitId: id },
+      });
+
+      return tx.unit.update({
+        where: { id },
+        data: {
+          deletedAt: new Date(),
+        },
+      });
+    });
+  }
 }

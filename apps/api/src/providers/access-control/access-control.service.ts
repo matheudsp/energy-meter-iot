@@ -1,4 +1,8 @@
-import { Injectable, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../database/prisma/prisma.service';
 import { UserRole } from '@/common/enums/domain.enums';
 
@@ -113,19 +117,35 @@ export class AccessControlService {
   }
 
   /**
-   * Valida acesso e lança exceção se não permitido
+   * Verifica acesso à planta e LANÇA ERRO se não permitido.
+   * Usado para operações de escrita (Update/Delete).
    */
   async requirePlantAccess(
     userId: string,
     plantId: string,
     userRole: UserRole,
   ): Promise<void> {
-    const hasAccess = await this.canAccessPlant(userId, plantId, userRole);
-    if (!hasAccess) {
-      throw new ForbiddenException(
-        'Você não tem permissão para acessar esta planta.',
-      );
+    if (userRole === UserRole.ADMIN) return;
+
+    const plant = await this.prisma.plant.findUnique({
+      where: { id: plantId },
+      select: { ownerId: true, deletedAt: true },
+    });
+
+    if (!plant || plant.deletedAt) {
+      throw new NotFoundException('Planta não encontrada.');
     }
+
+    if (
+      (userRole === UserRole.OWNER || userRole === UserRole.INTEGRATOR) &&
+      plant.ownerId === userId
+    ) {
+      return;
+    }
+
+    throw new ForbiddenException(
+      'Você não tem permissão para alterar esta planta.',
+    );
   }
 
   /**

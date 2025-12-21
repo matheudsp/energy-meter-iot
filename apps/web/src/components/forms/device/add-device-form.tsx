@@ -10,6 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface AddDeviceProps {
   plantId: string;
@@ -27,18 +28,22 @@ export function AddDeviceForm({ plantId, onSuccess }: AddDeviceProps) {
     setError("");
 
     try {
-      await api.post(`/plants/${plantId}/devices`, {
+      await api.post("/devices/associate", {
         serialNumber,
+        plantId,
       });
 
+      toast.success("Dispositivo vinculado com sucesso!");
       setSerialNumber("");
       onSuccess?.();
     } catch (err: any) {
       console.error(err);
-      setError(
+      const errorMessage =
         err.response?.data?.message ||
-          "Falha ao vincular dispositivo. Verifique se o Serial Number está correto e não pertence a outra planta."
-      );
+        "Falha ao vincular dispositivo. Verifique se o Serial Number está correto.";
+
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

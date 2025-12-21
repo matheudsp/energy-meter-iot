@@ -6,7 +6,7 @@ export enum UserRole {
 }
 
 export enum DeviceStatus {
-  PROVISIONED = 'PROVISIONED', // Cadastrado, aguardando conexão
+  // PROVISIONED = 'PROVISIONED', // Cadastrado, aguardando conexão
   ONLINE = 'ONLINE',
   OFFLINE = 'OFFLINE',
   MAINTENANCE = 'MAINTENANCE',

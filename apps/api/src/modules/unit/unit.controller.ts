@@ -7,6 +7,7 @@ import {
   Query,
   ForbiddenException,
   Patch,
+  Delete,
 } from '@nestjs/common';
 import { UnitService } from './unit.service';
 import { CreateUnitDto } from './dto/create-unit.dto';
@@ -64,11 +65,19 @@ export class UnitController {
   }
 
   @Patch(':id')
+  @Roles(UserRole.ADMIN, UserRole.OWNER, UserRole.INTEGRATOR)
   update(
     @Param('id') id: string,
     @Body() dto: UpdateUnitDto,
     @CurrentUser() user: JwtPayload,
   ) {
     return this.unitService.update(id, dto, user);
+  }
+
+  @Delete(':id')
+  @Roles(UserRole.ADMIN, UserRole.OWNER, UserRole.INTEGRATOR)
+  @ApiOperation({ summary: 'Excluir uma unidade (Soft Delete)' })
+  remove(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
+    return this.unitService.remove(id, user);
   }
 }

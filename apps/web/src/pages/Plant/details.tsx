@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router";
+import { useParams, useNavigate } from "react-router";
 import { usePlantDetails } from "@/hooks/use-plant-details";
 import {
   ArrowLeft,
@@ -9,8 +9,12 @@ import {
   Settings,
   Building2,
   Plus,
-  MoreVertical,
   Trash2,
+  Loader2,
+  AlertTriangle,
+  Save,
+  Pencil,
+  X,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -23,14 +27,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
 import { PageLoading } from "@/components/feedbacks/page-loading";
 import { PageError } from "@/components/feedbacks/page-error";
 import { UnitCard } from "@/components/unit/unit-card";
@@ -38,21 +35,95 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { AddDeviceForm } from "@/components/forms/device/add-device-form";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   NewUnitForm,
   type OccupiedChannel,
 } from "@/components/forms/unit/new-unit-form";
+import { Input } from "@/components/ui/input";
+import { useAuth } from "@/context/auth-context";
+import { useMutation } from "@tanstack/react-query";
+import { UserRole } from "@/types";
+import { api } from "@/api/client";
+import { toast } from "sonner";
+import { DeviceCard } from "@/components/devices/device-card";
+
 export default function PlantDetailsPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
   const { data: plant, isLoading, error, refetch } = usePlantDetails(id!);
   const [isDeviceDialogOpen, setIsDeviceDialogOpen] = useState(false);
   const [isUnitDialogOpen, setIsUnitDialogOpen] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({ name: "", address: "" });
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  const canManage =
+    user &&
+    plant &&
+    (user.role === UserRole.ADMIN ||
+      user.id === plant.ownerId ||
+      user.id === plant.ownerId);
+
+  useEffect(() => {
+    if (plant) {
+      setFormData({
+        name: plant.name,
+        address: plant.address || "",
+      });
+    }
+  }, [plant]);
+
+  const { mutate: updatePlant, isPending: isUpdating } = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      await api.patch(`/plants/${id}`, data);
+    },
+    onSuccess: () => {
+      toast.success("Planta atualizada com sucesso!");
+      setIsEditing(false);
+      refetch();
+    },
+    onError: (error) => {
+      console.error(error);
+      toast.error("Erro ao atualizar planta.");
+    },
+  });
+
+  const { mutate: deletePlant, isPending: isDeleting } = useMutation({
+    mutationFn: async () => {
+      await api.delete(`/plants/${id}`);
+    },
+    onSuccess: () => {
+      toast.success("Planta excluída com sucesso.");
+      navigate("/plants");
+    },
+    onError: (error: any) => {
+      console.error(error);
+      const msg = error.response?.data?.message || "Erro ao excluir planta.";
+      toast.error(msg);
+    },
+  });
+
+  const handleSave = () => {
+    updatePlant(formData);
+  };
+
+  const handleCancel = () => {
+    if (plant) {
+      setFormData({ name: plant.name, address: plant.address || "" });
+    }
+    setIsEditing(false);
+  };
+
   if (isLoading)
     return <PageLoading message="Carregando informações da planta..." />;
   if (error)
@@ -78,14 +149,14 @@ export default function PlantDetailsPage() {
     <div className="min-h-screen bg-background">
       <div className="bg-card border-b border-border">
         <div className="max-w-7xl px-4 sm:px-6 lg:px-8 py-6 md:py-8 mx-auto">
-          <Link
-            to="/plants"
-            className="inline-flex items-center text-sm text-muted-foreground hover:text-primary mb-4 md:mb-6 transition-colors"
-          >
-            <ArrowLeft className="mr-2 size-4" />
-            Voltar
-          </Link>
-
+          <div>
+            <button
+              onClick={() => navigate(-1)}
+              className="inline-flex items-center text-sm text-muted-foreground hover:text-primary mb-4 md:mb-6 transition-colors"
+            >
+              <ArrowLeft size={16} className="mr-1" /> Voltar
+            </button>
+          </div>
           <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
             <div className="size-16 md:size-24 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
               <Building2 className="size-8 md:size-12 text-primary" />
@@ -281,75 +352,16 @@ export default function PlantDetailsPage() {
                 {plant.devices && plant.devices.length > 0 ? (
                   <div className="divide-y divide-border rounded-md border border-border">
                     {plant.devices.map((device: any) => (
-                      <div
+                      <DeviceCard
                         key={device.id}
-                        className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors gap-3"
-                      >
-                        <div className="flex items-center gap-3 sm:gap-4 overflow-hidden">
-                          <div className="bg-muted p-2.5 rounded-full shrink-0">
-                            <Cpu className="size-5 text-foreground" />
-                          </div>
-                          <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <p className="font-medium text-sm truncate">
-                                {device.serialNumber}
-                              </p>
-                              <Badge
-                                variant={
-                                  device.status === "ONLINE"
-                                    ? "default"
-                                    : "secondary"
-                                }
-                                className={`text-[10px] px-1.5 py-0 shrink-0 ${
-                                  device.status === "ONLINE"
-                                    ? "bg-green-600/15 text-green-700 dark:bg-green-900/30 dark:text-green-400 hover:bg-green-600/25"
-                                    : ""
-                                }`}
-                              >
-                                {device.status || "OFFLINE"}
-                              </Badge>
-                            </div>
-                            <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                              <span className="hidden sm:inline">
-                                Firmware: {device.firmwareVersion || "N/A"} •{" "}
-                              </span>
-                              <span>
-                                Último sinal:{" "}
-                                {device.lastSeenAt
-                                  ? new Date(device.lastSeenAt).toLocaleString()
-                                  : "N/A"}
-                              </span>
-                            </p>
-                          </div>
-                        </div>
-
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="size-8 shrink-0"
-                            >
-                              <MoreVertical className="size-4 text-muted-foreground" />
-                              <span className="sr-only">Ações</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Gerenciar</DropdownMenuLabel>
-                            <DropdownMenuItem>
-                              <Settings className="mr-2 size-4" /> Configurar
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive focus:text-destructive">
-                              <Trash2 className="mr-2 size-4" /> Desvincular
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
+                        device={device}
+                        onUpdate={refetch}
+                      />
                     ))}
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center py-10 text-center bg-muted/20 border border-dashed rounded-lg px-4">
+                    {/* ... (conteúdo de estado vazio mantido igual) ... */}
                     <Cpu className="size-10 text-muted-foreground/50 mb-3" />
                     <p className="text-sm font-medium text-foreground">
                       Nenhum dispositivo vinculado
@@ -361,6 +373,7 @@ export default function PlantDetailsPage() {
                       variant="outline"
                       size="sm"
                       className="w-full sm:w-auto"
+                      onClick={() => setIsDeviceDialogOpen(true)}
                     >
                       Adicionar Agora
                     </Button>
@@ -370,50 +383,169 @@ export default function PlantDetailsPage() {
             </Card>
           </TabsContent>
 
-          <TabsContent
-            value="settings"
-            className="mt-6 animate-in fade-in duration-300 px-4 sm:px-0"
-          >
-            <Card>
-              <CardHeader>
-                <CardTitle>Configurações da Planta</CardTitle>
-                <CardDescription>
-                  Gerencie dados cadastrais e permissões.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-2">
-                  <label className="text-sm font-medium">Nome da Planta</label>
-                  <input
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-                    value={plant.name}
-                    disabled
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <label className="text-sm font-medium">Endereço</label>
-                  <input
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-                    value={plant.address || ""}
-                    disabled
-                  />
-                </div>
+          {canManage && (
+            <TabsContent
+              value="settings"
+              className="mt-6 animate-in fade-in duration-300 px-1 sm:px-0"
+            >
+              <Card>
+                <CardHeader className="flex flex-row items-start justify-between">
+                  <div>
+                    <CardTitle>Configurações da Planta</CardTitle>
+                    <CardDescription>
+                      Gerencie dados cadastrais e o ciclo de vida da planta.
+                    </CardDescription>
+                  </div>
+                  {!isEditing ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEditing(true)}
+                    >
+                      <Pencil className="mr-2 size-4" /> Editar
+                    </Button>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleCancel}
+                        disabled={isUpdating}
+                      >
+                        <X className="mr-2 size-4" /> Cancelar
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={handleSave}
+                        disabled={isUpdating}
+                      >
+                        {isUpdating ? (
+                          <Loader2 className="mr-2 size-4 animate-spin" />
+                        ) : (
+                          <Save className="mr-2 size-4" />
+                        )}
+                        Salvar
+                      </Button>
+                    </div>
+                  )}
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid gap-2">
+                    <label className="text-sm font-medium">
+                      Nome da Planta
+                    </label>
+                    <Input
+                      value={formData.name}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
+                      disabled={!isEditing || isUpdating}
+                      placeholder="Ex: Condomínio Solar"
+                    />
+                  </div>
 
-                <div className="pt-4 border-t">
-                  <h4 className="text-sm font-medium text-destructive mb-2">
-                    Zona de Perigo
-                  </h4>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    className="w-full sm:w-auto"
-                  >
-                    Excluir Planta
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                  <div className="grid gap-2">
+                    <label className="text-sm font-medium">Endereço</label>
+                    <Input
+                      value={formData.address}
+                      onChange={(e) =>
+                        setFormData({ ...formData, address: e.target.value })
+                      }
+                      disabled={!isEditing || isUpdating}
+                      placeholder="Endereço completo"
+                    />
+                  </div>
+
+                  {/* Zona de Perigo */}
+                  <div className="pt-6 mt-6 border-t border-red-100 dark:border-red-900/30">
+                    <h4 className="text-sm font-semibold text-destructive mb-1 flex items-center gap-2">
+                      <AlertTriangle className="size-4" /> Zona de Perigo
+                    </h4>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Ações irreversíveis que afetam toda a planta.
+                    </p>
+
+                    <Dialog
+                      open={isDeleteDialogOpen}
+                      onOpenChange={(open: boolean) => {
+                        setIsDeleteDialogOpen(open);
+                        if (!open) setDeleteConfirmation("");
+                      }}
+                    >
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="w-full sm:w-auto"
+                        >
+                          <Trash2 className="mr-2 size-4" /> Excluir Planta
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Excluir Planta?</DialogTitle>
+                          <DialogDescription>
+                            Você está prestes a excluir{" "}
+                            <strong>{plant.name}</strong>.
+                            <br />
+                            <br />
+                            Isso removerá o acesso a todas as unidades e
+                            histórico associado. Esta ação não pode ser
+                            desfeita.
+                          </DialogDescription>
+                        </DialogHeader>
+
+                        <div className="py-4">
+                          <label className="text-sm text-muted-foreground mb-2 block">
+                            Para confirmar, digite{" "}
+                            <span className="font-bold text-foreground select-all">
+                              excluir
+                            </span>{" "}
+                            abaixo:
+                          </label>
+                          <Input
+                            value={deleteConfirmation}
+                            onChange={(e) =>
+                              setDeleteConfirmation(e.target.value)
+                            }
+                            placeholder="excluir"
+                            className="border-red-200 focus-visible:ring-red-500"
+                            autoComplete="off"
+                          />
+                        </div>
+
+                        <DialogFooter className="gap-2">
+                          <Button
+                            variant="outline"
+                            onClick={() => setIsDeleteDialogOpen(false)}
+                            disabled={isDeleting}
+                          >
+                            Cancelar
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            onClick={() => deletePlant()}
+                            disabled={
+                              isDeleting || deleteConfirmation !== "excluir"
+                            }
+                          >
+                            {isDeleting ? (
+                              <>
+                                <Loader2 className="mr-2 size-4 animate-spin" />{" "}
+                                Excluindo...
+                              </>
+                            ) : (
+                              "Confirmar Exclusão"
+                            )}
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </div>
