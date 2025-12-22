@@ -7,6 +7,7 @@ import { TelemetryModule } from './telemetry/telemetry.module';
 import { UsersModule } from './user/user.module';
 import { TenancyModule } from './tenancy/tenancy.module';
 import { AuthModule } from './auth/auth.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { AuthModule } from './auth/auth.module';
     PlantModule,
     TelemetryModule,
     TenancyModule,
+    DashboardModule,
   ],
   providers: [],
 })

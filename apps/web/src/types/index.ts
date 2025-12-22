@@ -5,6 +5,15 @@ export interface User {
   role: UserRole;
 }
 
+export interface Device {
+  id: string;
+  serialNumber: string;
+  status: "ONLINE" | "OFFLINE" | "MAINTENANCE" | string;
+  firmwareVersion?: string;
+  lastSeenAt?: string;
+  plantId?: string;
+}
+
 export interface Plant {
   id: string;
   name: string;
@@ -16,7 +25,7 @@ export interface Plant {
     devices: number;
   };
   units?: Unit[];
-  devices?: any[];
+  devices?: Device[];
 }
 
 export interface ChannelTelemetry {
@@ -49,6 +58,7 @@ export interface Unit {
   plant?: Plant;
   telemetry?: UnitTelemetry;
   channelMaps?: ChannelMap[];
+  devices?: Device[];
 }
 
 export interface HistoryPoint {

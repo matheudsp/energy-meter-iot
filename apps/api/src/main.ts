@@ -32,10 +32,13 @@ async function bootstrap() {
       clientId: 'backend-service-' + Math.random().toString(16).substring(2, 8),
     },
   });
-  app.enableCors();
+  app.enableCors({
+    origin: '*', //only dev, warn!
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  });
   setupSwagger(app);
   await app.startAllMicroservices();
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
 
   logger.log(`API running on ${process.env.PORT ?? 3000}`);
   logger.log(`MQTT Microservice is listening on ${process.env.MQTT_URL}`);
