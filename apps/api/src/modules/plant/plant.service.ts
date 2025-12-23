@@ -40,7 +40,7 @@ export class PlantService {
     return this.prisma.plant.findMany({
       where: plantFilter,
       include: {
-        owner: true,
+        owner: { select: { name: true, email: true } },
         devices: true,
         units: {
           where: unitFilter,
@@ -50,7 +50,8 @@ export class PlantService {
   }
 
   async findOne(id: string, user: JwtPayload) {
-    await this.accessControl.requirePlantAccess(user.sub, id, user.role);
+    await this.accessControl.requirePlantReadAccess(user.sub, id, user.role);
+
     const unitFilter = this.accessControl.getUnitAccessFilter(
       user.sub,
       user.role,
@@ -59,7 +60,7 @@ export class PlantService {
     const plant = await this.prisma.plant.findUnique({
       where: { id },
       include: {
-        owner: true,
+        owner: { select: { name: true, email: true } },
         devices: true,
         units: {
           where: unitFilter,

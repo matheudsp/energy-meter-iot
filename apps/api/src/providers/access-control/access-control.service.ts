@@ -217,6 +217,23 @@ export class AccessControlService {
   }
 
   /**
+   * Valida acesso de LEITURA à planta e lança exceção se não permitido.
+   * Permite Admin, Owner, Integrator e Tenant (se tiver contrato).
+   */
+  async requirePlantReadAccess(
+    userId: string,
+    plantId: string,
+    userRole: UserRole,
+  ): Promise<void> {
+    const hasAccess = await this.canAccessPlant(userId, plantId, userRole);
+    if (!hasAccess) {
+      throw new ForbiddenException(
+        'Você não tem permissão para visualizar esta planta.',
+      );
+    }
+  }
+
+  /**
    * Retorna os IDs de unidades que o usuário pode acessar
    */
   async getAccessibleUnitIds(

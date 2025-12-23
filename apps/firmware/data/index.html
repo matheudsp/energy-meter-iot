@@ -131,15 +131,21 @@
       function renderMeters() {
         const list = document.getElementById("meter-list");
         list.innerHTML = "";
+
+        currentConfig.meters.sort((a, b) => a.channel_index - b.channel_index);
+
         currentConfig.meters.forEach((m, index) => {
+          const displayChannel =
+            m.channel_index !== undefined ? m.channel_index : m.id;
+
           list.innerHTML += `
-                    <tr>
-                        <td>${m.name}</td>
-                        <td>${m.modbus_id}</td>
-                        <td style="text-align: right;">
-                            <button class="btn-danger" style="width: auto; padding: 5px 10px;" onclick="removeMeter(${index})">🗑️</button>
-                        </td>
-                    </tr>`;
+              <tr>
+                  <td><b>#${displayChannel}</b> - ${m.name}</td>
+                  <td>Endereço: ${m.modbus_id}</td>
+                  <td style="text-align: right;">
+                      <button class="btn-danger" style="width: auto; padding: 5px 10px;" onclick="removeMeter(${index})">🗑️</button>
+                  </td>
+              </tr>`;
         });
       }
 
@@ -151,21 +157,30 @@
       function addMeter() {
         const name = document.getElementById("m-name").value;
         const modbusId = parseInt(document.getElementById("m-modbus").value);
-        if (!name) return alert("Digite um nome!");
+        const channelId = parseInt(document.getElementById("m-channel").value);
 
-        // Gera ID interno
-        const newId =
-          (currentConfig.meters.length > 0
-            ? Math.max(...currentConfig.meters.map((m) => m.id))
-            : 0) + 1;
+        if (!name) return alert("Digite um nome!");
+        if (!channelId) return alert("Defina o ID do Canal (MQTT)!");
+
+        const exists = currentConfig.meters.some(
+          (m) => m.channel_index === channelId
+        );
+        if (exists)
+          return alert("Erro: Já existe um medidor com este ID de Canal!");
+
+        const internalId = Date.now() % 10000;
 
         currentConfig.meters.push({
-          id: newId,
+          id: internalId,
+          channel_index: channelId,
           modbus_id: modbusId,
           name: name,
         });
+
         renderMeters();
+
         document.getElementById("m-name").value = "";
+        document.getElementById("m-channel").value = "";
         toggleForm();
       }
 
@@ -177,7 +192,6 @@
       }
 
       async function saveMeters() {
-        // Envia a config completa (o backend espera isso)
         try {
           const res = await fetch("/api/save", {
             method: "POST",

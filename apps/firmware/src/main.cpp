@@ -100,21 +100,23 @@ void taskModbus(void *parameter) {
     while (true) {
         unsigned long start = millis();
 
-        // 1. Itera sobre os medidores configurados
+        // Itera sobre os medidores configurados
         for (const auto &meter : sysConfig.meters) {
             MeterReading reading;
             
-            // Tenta ler do hardware RS485 (Isso bloqueia por alguns ms, por isso tem sua própria Task)
+            // Tenta ler do hardware RS485
             if (modbusWorker.readMeter(meter.modbusId, reading)) {
-                reading.channelId = meter.id;
                 
-                // 2. Envia para a Fila (Para o MQTT pegar depois)
+                //  Usa o channelIndex configurado manualmente
+                reading.channelId = meter.channelIndex; 
+                
+                // Envia para a Fila
                 xQueueSend(readingQueue, &reading, pdMS_TO_TICKS(100));
             }
-            vTaskDelay(pdMS_TO_TICKS(50)); // Pequena pausa entre medidores para estabilidade do barramento
+            vTaskDelay(pdMS_TO_TICKS(50));
         }
 
-        // 3. Espera o intervalo configurado (Ex: 5 min)
+        // Espera o intervalo configurado (Ex: 5 min)
         // Nota: Cálculo simplificado. O ideal é usar millis() diff para precisão.
         vTaskDelay(pdMS_TO_TICKS(sysConfig.interval * 1000));
     }

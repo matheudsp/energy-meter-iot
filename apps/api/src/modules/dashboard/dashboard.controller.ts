@@ -13,8 +13,12 @@ export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
   @Get('overview')
-  @Roles(UserRole.ADMIN, UserRole.OWNER, UserRole.INTEGRATOR)
+  @Roles(UserRole.ADMIN, UserRole.OWNER, UserRole.INTEGRATOR, UserRole.TENANT)
   async getOverview(@CurrentUser() user: JwtPayload) {
+    if (user.role === UserRole.TENANT) {
+      return this.dashboardService.getTenantOverview(user);
+    }
+
     return this.dashboardService.getOverview(user);
   }
 }

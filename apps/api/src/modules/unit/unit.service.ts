@@ -87,7 +87,7 @@ export class UnitService {
       where: filter,
       include: {
         plant: {
-          include: { owner: true },
+          include: { owner: { select: { name: true, email: true } } },
         },
         channelMaps: {
           include: { device: true },

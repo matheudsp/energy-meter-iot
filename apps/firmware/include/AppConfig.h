@@ -5,6 +5,7 @@
 // Estrutura de um medidor individual
 struct MeterConfig {
     uint8_t id;         // ID interno (ex: 1, 2)
+    uint8_t channelIndex;
     uint8_t modbusId;   // Endereço no barramento RS485 (ex: 10, 11)
     String name;        // Ex: "Kitnet 101"
 };

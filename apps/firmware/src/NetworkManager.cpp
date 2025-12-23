@@ -129,8 +129,7 @@ void NetworkManager::setupWebServer(ConfigManager &configManager) {
     server.on("/api/save", HTTP_POST, 
         [](AsyncWebServerRequest *request){},
         NULL,
-        [this, &configManager](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
-            
+        [this, &configManager](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {  
             JsonDocument doc;
             DeserializationError error = deserializeJson(doc, data);
 
@@ -139,31 +138,30 @@ void NetworkManager::setupWebServer(ConfigManager &configManager) {
                 return;
             }
 
-            // 1. Atualiza WiFi e MQTT
+            // Atualiza WiFi e MQTT
             _config->wifiSsid = doc["wifi"]["ssid"] | _config->wifiSsid;
             _config->wifiPass = doc["wifi"]["pass"] | _config->wifiPass;
             _config->mqttServer = doc["mqtt"]["server"] | _config->mqttServer;
             _config->mqttPort = doc["mqtt"]["port"] | _config->mqttPort;
-            // Adicionei o intervalo aqui também, pois faltava
             _config->interval = doc["mqtt"]["interval"] | _config->interval;
-
-            // 2. Atualiza Medidores (ESTE BLOCO ESTAVA FALTANDO)
-            if (doc.containsKey("meters")) {
+            
+          if (doc.containsKey("meters")) {
                 _config->meters.clear(); // Limpa a lista antiga da memória
                 JsonArray meters = doc["meters"];
                 for (JsonObject m : meters) {
                     MeterConfig mc;
                     mc.id = m["id"];
+                    mc.channelIndex = m["channel_index"] | m["id"]; 
                     mc.modbusId = m["modbus_id"];
                     mc.name = m["name"].as<String>();
                     _config->meters.push_back(mc);
                 }
             }
             
-            // 3. Configurações de sistema
+            //  Configurações de sistema
             _config->apModeForce = false; 
 
-            // 4. Salva no LittleFS
+            //  Salva no LittleFS
             if (configManager.save(*_config)) {
                 request->send(200, "application/json", "{\"status\":\"success\",\"msg\":\"Configurações salvas. Reiniciando...\"}");
                 

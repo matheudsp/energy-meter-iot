@@ -2,12 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
 import type { Plant } from "../types";
 
-interface PlantDetails extends Plant {
-  units: any[];
-  devices: any[];
-}
-
-async function fetchPlantDetails(id: string): Promise<PlantDetails> {
+async function fetchPlantDetails(id: string): Promise<Plant> {
   const { data } = await api.get(`/plants/${id}`);
   return data;
 }
